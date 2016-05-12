@@ -34,7 +34,6 @@ class TodoListResource(Resource):
         db.session.commit()
         return '', 204
 
-
 class TodoResource(Resource):
     @marshal_with(todo_fields)
     def get(self, todo_id):
@@ -51,6 +50,41 @@ class TodoResource(Resource):
             db.session.commit()
             return '', 204
         return {}, 400
+
+    @marshal_with(todo_fields)
+    def delete(self, todo_id):
+        """Delete a todo record. """
+        # Query the database with the selected id. 
+        todo = Todo.query.get(todo_id)
+        # If the query fails then abort. 
+        if not todo:
+            restful.abort(404, message='Invalid todo')
+        # Delete the record. 
+        db.session.delete(todo)
+        # Commit the database change. 
+        db.session.commit()
+
+    def delete_all(self):
+        """
+        Delete all the rows.
+
+        """
+        # Create query object.
+        todo = Todo.query()
+        # If the query fails then abort. 
+        if not todo:
+            restful.abort(404, message='Invalid todo')
+        # Featch all the rows. 
+        rows = query.statement.execute().fetchall()
+        # Iterate over each record. 
+        for row in rows:
+            # Delete the record. 
+            db.session.delete(row)
+        # Commit the database change. Only need to commit last delete.
+        db.session.commit()
+            
+
+
 
 api.add_resource(TodoListResource, '/todo')
 api.add_resource(TodoResource, '/todo/<string:todo_id>')

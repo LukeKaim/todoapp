@@ -25,6 +25,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if args.init:
         init()
-    else:
+    else:  
         port = int(os.environ.get("PORT", 3000)) # I like port 3000 :)
         app.run(host='0.0.0.0', port=port)  
