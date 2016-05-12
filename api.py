@@ -34,6 +34,24 @@ class TodoListResource(Resource):
         db.session.commit()
         return '', 204
 
+    def delete(self):
+        """
+        Delete method that deletes one or all records. 
+        """
+        # Test if the to do object is checked meaning complete. 
+        # If it is then delete just the one todo object. 
+        if request.args.get('done'):
+            to_delete = Todo.query.filter_by(done=True)
+        # Else delete all the records. 
+        else:
+            to_delete = Todo.query.all()
+        # Iterate over the to_delete object deleting one at a time. 
+        for item in to_delete:
+            db.session.delete(item)
+        # Commit only needs to be called once at the end. 
+        db.session.commit()
+        return '', 204
+
 class TodoResource(Resource):
     @marshal_with(todo_fields)
     def get(self, todo_id):
@@ -51,39 +69,21 @@ class TodoResource(Resource):
             return '', 204
         return {}, 400
 
-    @marshal_with(todo_fields)
     def delete(self, todo_id):
-        """Delete a todo record. """
-        # Query the database with the selected id. 
-        todo = Todo.query.get(todo_id)
-        # If the query fails then abort. 
-        if not todo:
-            restful.abort(404, message='Invalid todo')
-        # Delete the record. 
-        db.session.delete(todo)
-        # Commit the database change. 
-        db.session.commit()
-
-    def delete_all(self):
         """
-        Delete all the rows.
-
+        Method to actually delete record from database.
         """
-        # Create query object.
-        todo = Todo.query()
-        # If the query fails then abort. 
-        if not todo:
-            restful.abort(404, message='Invalid todo')
-        # Featch all the rows. 
-        rows = query.statement.execute().fetchall()
-        # Iterate over each record. 
-        for row in rows:
-            # Delete the record. 
-            db.session.delete(row)
-        # Commit the database change. Only need to commit last delete.
-        db.session.commit()
-            
-
+        # Query object that returns the correct record. 
+        to_delete = Todo.query.get(todo_id)
+        # Error handling. This tests if the query does not have any errors.
+        if to_delete:
+            # Delete the record from the database.
+            db.session.delete(to_delete)
+            # Commit the delete to the database. 
+            db.session.commit()
+            return '', 204
+        # Return error message because the query did not work. 
+        return {'error': 'The specified id was not found in the DB'}, 400
 
 
 api.add_resource(TodoListResource, '/todo')
